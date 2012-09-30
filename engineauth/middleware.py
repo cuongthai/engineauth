@@ -5,7 +5,7 @@ from engineauth.config import load_config
 import re
 from webob import Response
 from webob import Request
-
+import urllib
 class EngineAuthResponse(Response):
 
     def _save_session(self):
@@ -22,7 +22,7 @@ class EngineAuthResponse(Response):
             if session_id != session.user_id:
                 session = models.Session.upgrade_to_user_session(
                     session_id, session.user_id)
-        self.set_cookie('_eauth', session.serialize())
+        self.set_cookie('_eauth', urllib.quote(session.serialize()))
         return self
 
     def _save_user(self):
@@ -37,6 +37,7 @@ class EngineAuthRequest(Request):
         value = self.cookies.get('_eauth')
         session = None
         if value:
+            value= urllib.unquote(value)
             session = models.Session.get_by_value(value)
         if session is not None:
             # Create a hash for later comparison,
